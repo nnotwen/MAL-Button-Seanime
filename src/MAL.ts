@@ -21,8 +21,15 @@ function init() {
                 const malId = malLink.id;
                 const malUrl = `https://myanimelist.net/anime/${malId}`;
                 
-                // Open MAL page
-                await ctx.system.openURL(malUrl);
+                // Open URL by creating and clicking an invisible anchor
+                const anchor = document.createElement('a');
+                anchor.href = malUrl;
+                anchor.target = '_blank';
+                anchor.rel = 'noopener noreferrer';
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+                
                 ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
             } else {
                 ctx.toast.alert(`Could not find MAL entry for ${media.title.userPreferred}`);
