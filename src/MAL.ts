@@ -70,38 +70,52 @@ function init() {
             log.sendInfo(`=== MAL Button Click ===`);
             log.send(`Anime: ${media.title.userPreferred}`);
             log.send(`Media ID: ${media.id}`);
-            log.sendInfo(`Fetching full media object...`);
+            log.send(`idMal field: ${media.idMal}`);
             
             try {
-                // Fetch full media object using ctx.anime.getAnimeEntry
-                const animeEntry = await ctx.anime.getAnimeEntry(media.id);
-                
-                if (!animeEntry || !animeEntry.media) {
-                    log.sendError(`Failed to fetch full media object`);
-                    ctx.toast.alert(`Failed to fetch media data`);
-                    showLogsState.set(true);
-                    tray.open();
-                    return;
-                }
-                
-                const fullMedia = animeEntry.media;
-                log.sendSuccess(`Full media object fetched`);
-                
-                // Try to find MAL ID from external links
+                // First check if media has idMal field directly
                 let malId: string | null = null;
                 
-                if (fullMedia.externalLinks && fullMedia.externalLinks.length > 0) {
-                    log.send(`Found ${fullMedia.externalLinks.length} external links`);
-                    for (const link of fullMedia.externalLinks) {
-                        log.send(`  - ${link.site}: ${link.id}`);
-                        if (link.site?.toLowerCase() === 'myanimelist') {
-                            malId = link.id;
-                            log.sendSuccess(`Found MAL ID: ${malId}`);
-                            break;
+                if (media.idMal) {
+                    malId = String(media.idMal);
+                    log.sendSuccess(`Found MAL ID in media.idMal: ${malId}`);
+                } else {
+                    log.sendInfo(`No idMal in media object, fetching full anime entry...`);
+                    
+                    // Fetch full media object using ctx.anime.getAnimeEntry
+                    const animeEntry = await ctx.anime.getAnimeEntry(media.id);
+                    
+                    if (!animeEntry || !animeEntry.media) {
+                        log.sendError(`Failed to fetch full media object`);
+                        ctx.toast.error(`Failed to fetch media data`);
+                        showLogsState.set(true);
+                        tray.open();
+                        return;
+                    }
+                    
+                    const fullMedia = animeEntry.media;
+                    log.sendSuccess(`Full media object fetched`);
+                    
+                    // Check idMal in full object
+                    if (fullMedia.idMal) {
+                        malId = String(fullMedia.idMal);
+                        log.sendSuccess(`Found MAL ID: ${malId}`);
+                    } else {
+                        log.sendWarning("idMal not found in full media object");
+                    }
+                    
+                    // Try external links as fallback
+                    if (!malId && fullMedia.externalLinks && fullMedia.externalLinks.length > 0) {
+                        log.send(`Found ${fullMedia.externalLinks.length} external links`);
+                        for (const link of fullMedia.externalLinks) {
+                            log.send(`  - ${link.site}: ${link.id}`);
+                            if (link.site?.toLowerCase() === 'myanimelist') {
+                                malId = link.id;
+                                log.sendSuccess(`Found MAL ID from external link: ${malId}`);
+                                break;
+                            }
                         }
                     }
-                } else {
-                    log.sendWarning("No external links found in media object");
                 }
                 
                 if (malId) {
@@ -124,15 +138,15 @@ function init() {
                     document.body.removeChild(anchor);
                     log.send("Anchor removed");
                     
-                    ctx.toast.success(`Opening MAL: ${fullMedia.title.userPreferred}`);
+                    ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
                     log.sendSuccess("Toast notification sent");
                 } else {
-                    log.sendError(`No MAL ID found for ${fullMedia.title.userPreferred}`);
-                    ctx.toast.alert(`No MAL link found for ${fullMedia.title.userPreferred}`);
+                    log.sendError(`No MAL ID found for ${media.title.userPreferred}`);
+                    ctx.toast.error(`No MAL link found for ${media.title.userPreferred}`);
                 }
             } catch (error: any) {
                 log.sendError(`Exception: ${error?.message || error}`);
-                ctx.toast.alert(`Error: ${error?.message || error}`);
+                ctx.toast.error(`Error: ${error?.message || error}`);
             }
             
             // Show logs after a short delay
