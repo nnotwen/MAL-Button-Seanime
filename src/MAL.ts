@@ -125,22 +125,15 @@ function init() {
                     const malUrl = `https://myanimelist.net/anime/${malId}`;
                     log.send(`MAL URL: ${malUrl}`);
                     
-                    // Try ctx.browser.openUrl (Seanime plugin API)
-                    log.send(`Attempting ctx.browser.openUrl()...`);
+                    // Use externalPlayerLink.open() to open the link
+                    log.send(`Opening link via externalPlayerLink...`);
                     try {
-                        if ((ctx as any).browser?.openUrl) {
-                            log.send(`ctx.browser.openUrl is available`);
-                            await (ctx as any).browser.openUrl(malUrl);
-                            log.sendSuccess(`✓ Opened via ctx.browser.openUrl!`);
-                            ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
-                        } else {
-                            log.sendWarning(`ctx.browser.openUrl not available`);
-                            log.send(`Available ctx methods: ${Object.keys(ctx).join(', ')}`);
-                            ctx.toast.error(`Plugin API does not support opening URLs`);
-                        }
+                        ctx.externalPlayerLink.open(malUrl);
+                        log.sendSuccess(`✓ Opened MAL link!`);
+                        ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
                     } catch (err: any) {
-                        log.sendError(`ctx.browser.openUrl failed: ${err?.message || err}`);
-                        ctx.toast.error(`Failed: ${err?.message || err}`);
+                        log.sendError(`Failed to open: ${err?.message || err}`);
+                        ctx.toast.error(`Failed to open: ${err?.message || err}`);
                     }
                 } else {
                     log.sendError(`No MAL ID found for ${media.title.userPreferred}`);
