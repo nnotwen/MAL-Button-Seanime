@@ -69,50 +69,69 @@ function init() {
             
             log.sendInfo(`=== MAL Button Click ===`);
             log.send(`Anime: ${media.title.userPreferred}`);
-            log.sendInfo(`Checking external links...`);
+            log.send(`Media ID: ${media.id}`);
+            log.sendInfo(`Fetching full media object...`);
             
-            // Try to find MAL ID from external links
-            let malId: string | null = null;
-            
-            if (media.externalLinks && media.externalLinks.length > 0) {
-                log.send(`Found ${media.externalLinks.length} external links`);
-                for (const link of media.externalLinks) {
-                    log.send(`  - ${link.site}: ${link.id}`);
-                    if (link.site?.toLowerCase() === 'myanimelist') {
-                        malId = link.id;
-                        log.sendSuccess(`Found MAL ID: ${malId}`);
-                        break;
-                    }
+            try {
+                // Fetch full media object using $anilist API
+                const fullMedia = await $anilist.getAnime(media.id);
+                
+                if (!fullMedia) {
+                    log.sendError(`Failed to fetch full media object`);
+                    ctx.toast.alert(`Failed to fetch media data`);
+                    showLogsState.set(true);
+                    tray.open();
+                    return;
                 }
-            } else {
-                log.sendWarning("No external links found in media object");
-            }
-            
-            if (malId) {
-                const malUrl = `https://myanimelist.net/anime/${malId}`;
-                log.send(`Opening URL: ${malUrl}`);
                 
-                // Create temporary invisible anchor and click it
-                const anchor = document.createElement('a');
-                anchor.href = malUrl;
-                anchor.target = '_blank';
-                anchor.rel = 'noopener noreferrer';
+                log.sendSuccess(`Full media object fetched`);
                 
-                // Append to body, click, and remove
-                document.body.appendChild(anchor);
-                log.send("Anchor created and appended");
+                // Try to find MAL ID from external links
+                let malId: string | null = null;
                 
-                anchor.click();
-                log.sendSuccess("Anchor clicked!");
+                if (fullMedia.externalLinks && fullMedia.externalLinks.length > 0) {
+                    log.send(`Found ${fullMedia.externalLinks.length} external links`);
+                    for (const link of fullMedia.externalLinks) {
+                        log.send(`  - ${link.site}: ${link.id}`);
+                        if (link.site?.toLowerCase() === 'myanimelist') {
+                            malId = link.id;
+                            log.sendSuccess(`Found MAL ID: ${malId}`);
+                            break;
+                        }
+                    }
+                } else {
+                    log.sendWarning("No external links found in media object");
+                }
                 
-                document.body.removeChild(anchor);
-                log.send("Anchor removed");
-                
-                ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
-                log.sendSuccess("Toast notification sent");
-            } else {
-                log.sendError(`No MAL ID found for ${media.title.userPreferred}`);
-                ctx.toast.alert(`No MAL link found for ${media.title.userPreferred}`);
+                if (malId) {
+                    const malUrl = `https://myanimelist.net/anime/${malId}`;
+                    log.send(`Opening URL: ${malUrl}`);
+                    
+                    // Create temporary invisible anchor and click it
+                    const anchor = document.createElement('a');
+                    anchor.href = malUrl;
+                    anchor.target = '_blank';
+                    anchor.rel = 'noopener noreferrer';
+                    
+                    // Append to body, click, and remove
+                    document.body.appendChild(anchor);
+                    log.send("Anchor created and appended");
+                    
+                    anchor.click();
+                    log.sendSuccess("Anchor clicked!");
+                    
+                    document.body.removeChild(anchor);
+                    log.send("Anchor removed");
+                    
+                    ctx.toast.success(`Opening MAL: ${fullMedia.title.userPreferred}`);
+                    log.sendSuccess("Toast notification sent");
+                } else {
+                    log.sendError(`No MAL ID found for ${fullMedia.title.userPreferred}`);
+                    ctx.toast.alert(`No MAL link found for ${fullMedia.title.userPreferred}`);
+                }
+            } catch (error: any) {
+                log.sendError(`Exception: ${error.message}`);
+                ctx.toast.alert(`Error: ${error.message}`);
             }
             
             // Show logs after a short delay
