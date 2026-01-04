@@ -4,6 +4,61 @@
 function init() {
     $ui.register((ctx) => {
         
+        // Logging system (same as MALSync)
+        const log = {
+            id: "mal-button:logs",
+            record(message: [string, "Info" | "Warning" | "Error" | "Log" | "Success"]) {
+                $store.set(this.id, [...($store.get(this.id) ?? []), message]);
+            },
+
+            getEntries(): [string, "Info" | "Warning" | "Error" | "Log" | "Success"][] {
+                return $store.get(this.id) ?? [];
+            },
+
+            clearEntries() {
+                $store.set(this.id, []);
+                this.sendInfo("Log cleared!");
+            },
+
+            dateFormat() {
+                return new Date().toISOString().slice(0, 19);
+            },
+
+            sendError(message: string) {
+                this.record([`[${this.dateFormat()}] ${message}`, "Error"]);
+                console.error(`[MAL Button] ${message}`);
+            },
+
+            sendInfo(message: string) {
+                this.record([`[${this.dateFormat()}] ${message}`, "Info"]);
+                console.info(`[MAL Button] ${message}`);
+            },
+
+            sendWarning(message: string) {
+                this.record([`[${this.dateFormat()}] ${message}`, "Warning"]);
+                console.warn(`[MAL Button] ${message}`);
+            },
+
+            sendSuccess(message: string) {
+                this.record([`[${this.dateFormat()}] ${message}`, "Success"]);
+                console.log(`[MAL Button] ${message}`);
+            },
+
+            send(message: string) {
+                this.record([`[${this.dateFormat()}] ${message}`, "Log"]);
+                console.log(`[MAL Button] ${message}`);
+            },
+        };
+        
+        // Tray for showing logs
+        const tray = ctx.newTray({
+            tooltipText: "MAL Button Logs",
+            withContent: true,
+            width: '600px',
+        });
+        
+        const showLogsState = ctx.state<boolean>(false);
+        
         // Create MAL button
         const malButton = ctx.action.newAnimePageButton({ label: "MAL" });
         malButton.mount();
@@ -12,25 +67,30 @@ function init() {
         malButton.onClick(async (event) => {
             const media = event.media;
             
-            console.log("[MAL Button] Clicked on:", media.title.userPreferred);
-            console.log("[MAL Button] External links:", media.externalLinks);
+            log.sendInfo(`=== MAL Button Click ===");
+            log.send(`Anime: ${media.title.userPreferred}`);
+            log.sendInfo(`Checking external links...`);
             
             // Try to find MAL ID from external links
             let malId: string | null = null;
             
             if (media.externalLinks && media.externalLinks.length > 0) {
+                log.send(`Found ${media.externalLinks.length} external links`);
                 for (const link of media.externalLinks) {
-                    console.log("[MAL Button] Checking link:", link.site, "=>", link.id);
+                    log.send(`  - ${link.site}: ${link.id}`);
                     if (link.site?.toLowerCase() === 'myanimelist') {
                         malId = link.id;
+                        log.sendSuccess(`Found MAL ID: ${malId}`);
                         break;
                     }
                 }
+            } else {
+                log.sendWarning("No external links found in media object");
             }
             
             if (malId) {
                 const malUrl = `https://myanimelist.net/anime/${malId}`;
-                console.log("[MAL Button] Opening URL:", malUrl);
+                log.send(`Opening URL: ${malUrl}`);
                 
                 // Create temporary invisible anchor and click it
                 const anchor = document.createElement('a');
@@ -40,14 +100,101 @@ function init() {
                 
                 // Append to body, click, and remove
                 document.body.appendChild(anchor);
+                log.send("Anchor created and appended");
+                
                 anchor.click();
+                log.sendSuccess("Anchor clicked!");
+                
                 document.body.removeChild(anchor);
+                log.send("Anchor removed");
                 
                 ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
+                log.sendSuccess("Toast notification sent");
             } else {
-                console.log("[MAL Button] No MAL ID found");
+                log.sendError(`No MAL ID found for ${media.title.userPreferred}`);
                 ctx.toast.alert(`No MAL link found for ${media.title.userPreferred}`);
             }
+            
+            // Show logs after a short delay
+            ctx.setTimeout(() => {
+                showLogsState.set(true);
+                tray.open();
+            }, 100);
         });
+        
+        // Tray icon click to show logs
+        tray.onClick(() => {
+            showLogsState.set(true);
+            tray.open();
+        });
+        
+        // Render logs tray
+        tray.render(() => {
+            if (!showLogsState.get()) {
+                return tray.stack({ items: [tray.text("Click MAL button to see logs")] });
+            }
+            
+            const entries = log.getEntries();
+            const header = tray.flex(
+                [
+                    tray.text("MAL Button Logs", {
+                        style: {
+                            fontSize: "1.2em",
+                            fontWeight: "bold",
+                        },
+                    }),
+                    tray.button("Clear", {
+                        size: "sm",
+                        intent: "alert-subtle",
+                        onClick: ctx.eventHandler('clear-logs', () => {
+                            log.clearEntries();
+                            tray.update();
+                        }),
+                    }),
+                ],
+                {
+                    direction: "row",
+                    style: {
+                        justifyContent: "space-between",
+                        marginBottom: "8px",
+                    },
+                }
+            );
+            
+            const logItems = entries.map(([message, type]) => {
+                const color: Record<"Info" | "Warning" | "Error" | "Log" | "Success", string> = {
+                    Info: "#00afff",
+                    Warning: "#ffff5f",
+                    Error: "#ff5f5f",
+                    Log: "#bcbcbc",
+                    Success: "#5fff5f",
+                };
+                
+                return tray.text(message, {
+                    style: {
+                        fontFamily: "monospace",
+                        fontSize: "12px",
+                        color: color[type],
+                        lineHeight: "1.2",
+                    },
+                });
+            });
+            
+            const terminal = tray.div(logItems, {
+                style: {
+                    height: "400px",
+                    background: "#1a1a1a",
+                    border: "1px solid #333",
+                    borderRadius: "6px",
+                    padding: "8px",
+                    overflowY: "auto",
+                    fontFamily: "monospace",
+                },
+            });
+            
+            return tray.stack([header, terminal], { gap: 2, style: { padding: "12px" }});
+        });
+        
+        log.sendInfo("MAL Button initialized");
     });
 }
