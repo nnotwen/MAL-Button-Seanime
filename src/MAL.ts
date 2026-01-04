@@ -125,11 +125,12 @@ function init() {
                     const malUrl = `https://myanimelist.net/anime/${malId}`;
                     log.send(`MAL URL: ${malUrl}`);
                     
-                    // Use externalPlayerLink.open() to open the link
-                    log.send(`Opening link via externalPlayerLink...`);
+                    // Use $os.cmd("open", url) to open in browser
+                    log.send(`Opening link via system open command...`);
                     try {
-                        ctx.externalPlayerLink.open(malUrl);
-                        log.sendSuccess(`✓ Opened MAL link!`);
+                        const cmd = $os.cmd("open", malUrl);
+                        cmd.start();
+                        log.sendSuccess(`✓ Opened MAL in browser!`);
                         ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
                     } catch (err: any) {
                         log.sendError(`Failed to open: ${err?.message || err}`);
