@@ -125,31 +125,14 @@ function init() {
                     const malUrl = `https://myanimelist.net/anime/${malId}`;
                     log.send(`MAL URL: ${malUrl}`);
                     
-                    // Use $osExtra.asyncCmd to open link
+                    // Try using externalPlayerLink.open() - works for opening URLs
                     try {
-                        log.send(`Opening link using system open command...`);
-                        
-                        const cmd = (globalThis as any).$osExtra?.asyncCmd?.("open", malUrl);
-                        if (cmd) {
-                            cmd.run((data: any, err: any, exitCode: any, signal: any) => {
-                                if (exitCode !== undefined) {
-                                    if (exitCode === 0) {
-                                        log.sendSuccess(`Browser opened successfully (exit code: ${exitCode})`);
-                                    } else {
-                                        log.sendWarning(`Open command exited with code: ${exitCode}`);
-                                    }
-                                }
-                                if (err) {
-                                    log.sendWarning(`Error: ${$toString?.(err) || err}`);
-                                }
-                            });
-                            
-                            ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
-                        } else {
-                            throw new Error("$osExtra.asyncCmd not available");
-                        }
-                    } catch (cmdErr: any) {
-                        log.sendWarning(`Async open failed: ${cmdErr?.message || cmdErr}`);
+                        log.send(`Opening link via externalPlayerLink...`);
+                        ctx.externalPlayerLink?.open?.(malUrl, media.id, 0);
+                        log.sendSuccess(`Link opened successfully!`);
+                        ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
+                    } catch (linkErr: any) {
+                        log.sendWarning(`externalPlayerLink failed: ${linkErr?.message || linkErr}`);
                         log.send(`Attempting fallback: copying URL to clipboard`);
                         
                         // Fallback: copy to clipboard
