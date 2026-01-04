@@ -64,10 +64,10 @@ function init() {
         malButton.mount();
         
         // Handle button clicks
-        malButton.onClick(async (event) => {
+        malButton.onClick(async (event: any) => {
             const media = event.media;
             
-            log.sendInfo(`=== MAL Button Click ===");
+            log.sendInfo(`=== MAL Button Click ===`);
             log.send(`Anime: ${media.title.userPreferred}`);
             log.sendInfo(`Checking external links...`);
             
