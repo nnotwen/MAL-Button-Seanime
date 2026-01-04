@@ -4,16 +4,6 @@
 function init() {
     $ui.register((ctx) => {
         
-        // Create tray for confirmation modal
-        const tray = ctx.newTray({
-            tooltipText: "MAL",
-            withContent: true,
-            width: '400px',
-        });
-        
-        // State for MAL URL confirmation
-        const confirmUrl = ctx.state<{ url: string; title: string } | null>(null);
-        
         // Create MAL button
         const malButton = ctx.action.newAnimePageButton({ label: "MAL" });
         malButton.mount();
@@ -22,48 +12,42 @@ function init() {
         malButton.onClick(async (event) => {
             const media = event.media;
             
+            console.log("[MAL Button] Clicked on:", media.title.userPreferred);
+            console.log("[MAL Button] External links:", media.externalLinks);
+            
             // Try to find MAL ID from external links
-            const malLink = media.externalLinks?.find((link: any) => 
-                link.site?.toLowerCase() === 'myanimelist'
-            );
+            let malId: string | null = null;
             
-            if (malLink?.id) {
-                const malId = malLink.id;
+            if (media.externalLinks && media.externalLinks.length > 0) {
+                for (const link of media.externalLinks) {
+                    console.log("[MAL Button] Checking link:", link.site, "=>", link.id);
+                    if (link.site?.toLowerCase() === 'myanimelist') {
+                        malId = link.id;
+                        break;
+                    }
+                }
+            }
+            
+            if (malId) {
                 const malUrl = `https://myanimelist.net/anime/${malId}`;
-                confirmUrl.set({ url: malUrl, title: media.title.userPreferred });
-                tray.open();
+                console.log("[MAL Button] Opening URL:", malUrl);
+                
+                // Create temporary invisible anchor and click it
+                const anchor = document.createElement('a');
+                anchor.href = malUrl;
+                anchor.target = '_blank';
+                anchor.rel = 'noopener noreferrer';
+                
+                // Append to body, click, and remove
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+                
+                ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
             } else {
-                ctx.toast.alert(`Could not find MAL entry for ${media.title.userPreferred}`);
+                console.log("[MAL Button] No MAL ID found");
+                ctx.toast.alert(`No MAL link found for ${media.title.userPreferred}`);
             }
-        });
-        
-        // Render tray with confirmation modal
-        tray.render(() => {
-            const confirmed = confirmUrl.get();
-            
-            if (!confirmed) {
-                return tray.stack({ items: [tray.text("No anime selected")] });
-            }
-            
-            return tray.stack([
-                tray.text(`Open ${confirmed.title} on MAL?`, { isBold: true, size: 'lg' }),
-                tray.flex([
-                    tray.anchor({
-                        text: "Open MAL",
-                        href: confirmed.url,
-                        target: "_blank",
-                        className: "bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-md px-4 py-2 transition-colors no-underline"
-                    }),
-                    tray.button({
-                        label: "Cancel",
-                        intent: "gray",
-                        onClick: ctx.eventHandler('cancel-mal', () => {
-                            confirmUrl.set(null);
-                            tray.close();
-                        })
-                    })
-                ], { style: { gap: '8px', justifyContent: 'center', marginTop: '12px' }})
-            ], { style: { gap: '8px', alignItems: 'center', padding: '16px' }});
         });
     });
 }
