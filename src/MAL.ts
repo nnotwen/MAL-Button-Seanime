@@ -125,25 +125,16 @@ function init() {
                     const malUrl = `https://myanimelist.net/anime/${malId}`;
                     log.send(`MAL URL: ${malUrl}`);
                     
-                    // Try using externalPlayerLink.open() - works for opening URLs
+                    // Copy URL to clipboard
                     try {
-                        log.send(`Opening link via externalPlayerLink...`);
-                        ctx.externalPlayerLink?.open?.(malUrl, media.id, 0);
-                        log.sendSuccess(`Link opened successfully!`);
-                        ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
-                    } catch (linkErr: any) {
-                        log.sendWarning(`externalPlayerLink failed: ${linkErr?.message || linkErr}`);
-                        log.send(`Attempting fallback: copying URL to clipboard`);
-                        
-                        // Fallback: copy to clipboard
-                        try {
-                            await ctx.clipboard?.writeText?.(malUrl);
-                            ctx.toast.success(`URL copied: ${malUrl}`);
-                            log.sendSuccess(`URL copied to clipboard`);
-                        } catch (clipErr: any) {
-                            log.sendWarning(`Clipboard failed: ${clipErr?.message || clipErr}`);
-                            ctx.toast.info(`MAL: ${malUrl}`);
-                        }
+                        log.send(`Copying URL to clipboard...`);
+                        await ctx.clipboard?.writeText?.(malUrl);
+                        ctx.toast.success(`URL copied: ${malUrl}`);
+                        log.sendSuccess(`✓ URL copied to clipboard - paste in browser!`);
+                    } catch (clipErr: any) {
+                        log.sendWarning(`Clipboard failed: ${clipErr?.message || clipErr}`);
+                        ctx.toast.info(`MAL: ${malUrl}`);
+                        log.send(`Fallback: showing URL in toast`);
                     }
                 } else {
                     log.sendError(`No MAL ID found for ${media.title.userPreferred}`);
