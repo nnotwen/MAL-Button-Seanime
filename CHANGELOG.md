@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.2] - 2026-01-05
+
+### Fixed
+- **Critical fix**: Added `open` command to the `allow` list in manifest permissions
+  - Seanime was blocking the command due to missing authorization
+  - Now properly pre-authorized in manifest
+
 ## [1.21.1] - 2026-01-05
 
 ### Fixed
