@@ -12,12 +12,13 @@ function init() {
         
         // State for MAL URL
         const malUrlState = ctx.state<string | null>(null);
+        const animeNameState = ctx.state<string | null>(null);
         
         // Tray to show the link
         const malTray = ctx.newTray({
             tooltipText: "MAL Link",
             withContent: true,
-            width: '500px',
+            width: '550px',
             iconUrl: "https://raw.githubusercontent.com/bruuhim/MAL-Button-Seanime/refs/heads/main/src/icon.png",
         });
         
@@ -51,7 +52,8 @@ function init() {
                 if (malId) {
                     const url = `https://myanimelist.net/anime/${malId}`;
                     malUrlState.set(url);
-                    ctx.toast.success(`MAL: ${media.title.userPreferred}`);
+                    animeNameState.set(media.title.userPreferred);
+                    ctx.toast.success(`📌 Tap the link below`);
                     malTray.open();
                 } else {
                     ctx.toast.error(`No MAL ID found`);
@@ -64,34 +66,47 @@ function init() {
         // Render tray with link
         malTray.render(() => {
             const url = malUrlState.get();
+            const animeName = animeNameState.get();
             
             if (!url) {
                 return malTray.stack({
-                    items: [malTray.text("Click MAL button")],
+                    items: [malTray.text("Click MAL button to get link")],
                 });
             }
             
             return malTray.stack({
                 items: [
-                    malTray.text("MyAnimeList Link", {
+                    malTray.text(animeName || "MyAnimeList", {
                         style: {
                             fontSize: "1em",
                             fontWeight: "bold",
+                            marginBottom: "12px",
                         },
                     }),
-                    malTray.button(url, {
-                        intent: "primary",
+                    malTray.text(url, {
+                        style: {
+                            fontSize: "0.95em",
+                            color: "#4a9eff",
+                            fontFamily: "monospace",
+                            padding: "12px",
+                            background: "rgba(74, 158, 255, 0.1)",
+                            borderRadius: "6px",
+                            wordBreak: "break-all",
+                            lineHeight: "1.4",
+                            cursor: "text",
+                        },
                     }),
-                    malTray.text("Right-click to copy link", {
+                    malTray.text("⬆ Tap to select, copy & paste in browser", {
                         style: {
                             fontSize: "0.85em",
                             color: "#888",
+                            marginTop: "8px",
                         },
                     }),
                 ],
-                gap: 10,
+                gap: 0,
                 style: {
-                    padding: "12px",
+                    padding: "16px",
                 },
             });
         });
