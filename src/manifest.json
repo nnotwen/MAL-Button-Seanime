@@ -1,7 +1,7 @@
 {
     "id": "mal-button",
     "name": "MAL Button",
-    "version": "1.21.3",
+    "version": "1.21.4",
     "manifestURI": "https://raw.githubusercontent.com/bruuhim/MAL-Button-Seanime/refs/heads/main/src/manifest.json",
     "language": "typescript",
     "type": "plugin",
@@ -18,7 +18,7 @@
             "commandScopes": [
                 {
                     "command": "open",
-                    "args": [{"validator": "^https?://myanimelist\\.net/anime/[0-9]+$"}]
+                    "args": [{ "validator": "$ARGS" }]
                 }
             ]
         }
