@@ -60,6 +60,32 @@ function init() {
         
         const showLogsState = ctx.state<boolean>(false);
         
+        // v1.19.0: Move command execution to main scope (outside onClick)
+        // This ensures $osExtra is available in the correct context
+        const openMalLink = (url: string) => {
+            try {
+                log.send(`Executing async command: open ${url}`);
+                const cmd = $osExtra.asyncCmd("open", url);
+                cmd.run((data, err, exitCode, signal) => {
+                    if (data) {
+                        log.send(`Stdout: ${$toString(data)}`);
+                    }
+                    if (err) {
+                        log.sendError(`Stderr: ${$toString(err)}`);
+                    }
+                    if (exitCode !== undefined) {
+                        if (exitCode === 0) {
+                            log.sendSuccess(`✓ Command executed successfully (exit code: ${exitCode})`);
+                        } else {
+                            log.sendError(`Command failed with exit code: ${exitCode}, signal: ${signal}`);
+                        }
+                    }
+                });
+            } catch (e: any) {
+                log.sendError(`Failed to execute open command: ${e?.message || e}`);
+            }
+        };
+        
         // Create MAL button with text label
         const malButton = ctx.action.newAnimePageButton({ 
             label: "MAL",
@@ -70,7 +96,7 @@ function init() {
         malButton.onClick(async (event: any) => {
             const media = event.media;
             
-            log.sendInfo(`=== MAL Button Click ===`);
+            log.sendInfo(`=== MAL Button Click ===");
             log.send(`Anime: ${media.title.userPreferred}`);
             log.send(`Media ID: ${media.id}`);
             log.send(`idMal field: ${media.idMal}`);
@@ -125,17 +151,10 @@ function init() {
                     const malUrl = `https://myanimelist.net/anime/${malId}`;
                     log.send(`MAL URL: ${malUrl}`);
                     
-                    // Use $os.cmd("open", url) to open in browser
-                    log.send(`Opening link via system open command...`);
-                    try {
-                        const cmd = $os.cmd("open", malUrl);
-                        cmd.start();
-                        log.sendSuccess(`✓ Opened MAL in browser!`);
-                        ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
-                    } catch (err: any) {
-                        log.sendError(`Failed to open: ${err?.message || err}`);
-                        ctx.toast.error(`Failed to open: ${err?.message || err}`);
-                    }
+                    // v1.19.0: Call the openMalLink function from main scope
+                    log.send(`Opening link via $osExtra.asyncCmd...`);
+                    openMalLink(malUrl);
+                    ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
                 } else {
                     log.sendError(`No MAL ID found for ${media.title.userPreferred}`);
                     ctx.toast.error(`No MAL link found for ${media.title.userPreferred}`);
@@ -225,6 +244,6 @@ function init() {
             return tray.stack([header, terminal], { gap: 2, style: { padding: "12px" }});
         });
         
-        log.sendInfo("MAL Button initialized");
+        log.sendInfo("MAL Button v1.19.0 initialized");
     });
 }
