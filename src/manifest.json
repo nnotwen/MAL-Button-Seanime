@@ -1,7 +1,7 @@
 {
     "id": "mal-button",
     "name": "MAL Button",
-    "version": "1.21.4",
+    "version": "1.21.5",
     "manifestURI": "https://raw.githubusercontent.com/bruuhim/MAL-Button-Seanime/refs/heads/main/src/manifest.json",
     "language": "typescript",
     "type": "plugin",
@@ -17,7 +17,7 @@
             "scopes": ["system"],
             "commandScopes": [
                 {
-                    "command": "open",
+                    "command": "start",
                     "args": [{ "validator": "$ARGS" }]
                 }
             ]
