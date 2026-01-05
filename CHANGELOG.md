@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.20.0] - 2026-01-05
+
+### Fixed
+- **Critical fix**: Replaced `$osExtra.asyncCmd()` with `ctx.openUrl()` 
+  - `$osExtra` was not available in the plugin context
+  - Now using proper Seanime API for opening URLs
+  - Removed unnecessary commandScopes from manifest
+
+### Improved
+- Cleaner error handling
+- Proper use of Seanime plugin APIs
+
 ## [1.19.1] - 2026-01-05
 
 ### Fixed
