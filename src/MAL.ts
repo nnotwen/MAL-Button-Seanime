@@ -60,13 +60,19 @@ function init() {
         
         const showLogsState = ctx.state<boolean>(false);
         
-        // v1.20.0: Use Seanime's built-in open function from ctx
+        // v1.21.0: Use proper Seanime system command API
         const openMalLink = (url: string) => {
             try {
-                log.send(`Opening link: ${url}`);
-                // Use ctx.openUrl which is the proper Seanime API for opening URLs
-                ctx.openUrl(url);
-                log.sendSuccess(`✓ URL opened successfully`);
+                log.send(`Opening link via system open command: ${url}`);\n                const cmd = $os.cmd("open", url);
+                cmd.start();
+                cmd.wait();
+                
+                const exitCode = cmd.processState.exitCode();
+                if (exitCode === 0) {
+                    log.sendSuccess(`✓ URL opened successfully`);
+                } else {
+                    log.sendError(`Failed to open URL (exit code: ${exitCode})`);
+                }
             } catch (e: any) {
                 log.sendError(`Failed to open URL: ${e?.message || e}`);
             }
@@ -137,8 +143,7 @@ function init() {
                     const malUrl = `https://myanimelist.net/anime/${malId}`;
                     log.send(`MAL URL: ${malUrl}`);
                     
-                    // v1.20.0: Use proper Seanime API
-                    log.send(`Opening link via ctx.openUrl...`);
+                    // v1.21.0: Use proper Seanime system command
                     openMalLink(malUrl);
                     ctx.toast.success(`Opening MAL: ${media.title.userPreferred}`);
                 } else {
@@ -230,6 +235,6 @@ function init() {
             return tray.stack([header, terminal], { gap: 2, style: { padding: "12px" }});
         });
         
-        log.sendInfo("MAL Button v1.20.0 initialized");
+        log.sendInfo("MAL Button v1.21.0 initialized");
     });
 }
