@@ -1,45 +1,239 @@
-# ⚠️ ARCHIVED - See bruuhim/mal-button
+# MAL Button - Seanime Plugin
 
-This repository is superseded by the production-ready version: **[bruuhim/mal-button](https://github.com/bruuhim/mal-button)**
+<div align="center">
+  <img src="src/icon.png" alt="MAL Button Icon" width="128" height="128" />
+  <h3>🚀 Quick MyAnimeList Access for Seanime</h3>
+  <p>One-click MAL links directly from anime details page</p>
 
-## Migration Information
-
-**v1.22.3 was a development version.** The API limitations have been overcome with proper UI design!
-
-### What Was the Problem?
-
-v1.22.3 attempted to use clipboard APIs (`window.navigator.clipboard`) which don't exist in Seanime's sandboxed JS engine.
-
-### The Solution
-
-v1.0.0 uses Seanime's native **Tray UI components** to display a selectable link that users can long-press to copy. This is a clean, native approach that works within Seanime's constraints.
-
-## New Repository: bruuhim/mal-button
-
-🎯 **[bruuhim/mal-button](https://github.com/bruuhim/mal-button)** - Production-ready v1.0.0
-
-### Features
-
-✨ **One-Click MAL Access** - Click the MAL button on any anime page  
-🔗 **Smart Link Resolution** - Uses AniList's idMal + external links fallback  
-📋 **Clean UI** - Displays anime title and selectable MAL link  
-⚡ **Fast & Reliable** - No external API calls, uses Seanime's built-in AniList integration  
-📖 **Comprehensive Docs** - Full README with troubleshooting and roadmap  
-
-## Installation
-
-Head to **[bruuhim/mal-button](https://github.com/bruuhim/mal-button)** for the latest version.
-
-## What's New in v1.0.0?
-
-✅ Restructured codebase  
-✅ Enhanced error handling  
-✅ Comprehensive documentation  
-✅ TypeScript definitions included  
-✅ Production-ready implementation  
-✅ Proper Seanime API usage  
-✅ Toast notifications  
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](CHANGELOG.md)
+[![Seanime](https://img.shields.io/badge/seanime-2.7.0+-purple.svg)](https://github.com/5rahim/seanime)
+</div>
 
 ---
 
-**This beta repo is archived. Please use the new production repository for all future updates and support.**
+## 📋 Features
+
+✅ **One-Click MAL Links** - Fetch MyAnimeList links instantly  
+✅ **Smart ID Resolution** - Multiple fallback sources for MAL ID  
+✅ **Easy Copy** - Select & copy directly from the tray  
+✅ **Error Handling** - Graceful error messages & logging  
+✅ **Loading States** - Visual feedback during API calls  
+✅ **Production Ready** - Tested & optimized for stability  
+
+---
+
+## 🎯 How to Use
+
+### Installation
+
+1. **Open Seanime Extensions**
+   - Go to Settings → Extensions → Marketplace
+
+2. **Find MAL Button**
+   - Search for "MAL Button" or "MyAnimeList"
+   - Click Install
+
+3. **Reload Plugin**
+   - Restart Seanime or reload the plugin
+
+### Usage
+
+1. **Navigate to any anime details page**
+2. **Click the "MAL" button** at the top
+3. **A tray opens** showing the MyAnimeList link
+4. **Select the URL** (triple-click or drag to select)
+5. **Right-click → Copy**
+6. **Paste anywhere** (Ctrl+V / Cmd+V)
+
+---
+
+## 🛠️ How It Works
+
+### MAL ID Resolution Priority
+
+The plugin uses multiple sources to find the MAL ID:
+
+```
+1. Direct Media ID (fastest)
+   └─> media.idMal
+
+2. External Links (via API)
+   └─> Seanime API → anime entry → externalLinks
+
+3. Fallback
+   └─> Error message if not found
+```
+
+### State Management
+
+```typescript
+interface MALState {
+  url: string | null           // Current MAL URL
+  animeName: string | null     // Anime title
+  isLoading: boolean          // API call in progress
+  error: string | null        // Error message if any
+}
+```
+
+### Error Handling
+
+- Invalid anime IDs → "No MAL ID found"
+- API failures → "Error: [details]"
+- Missing data → Graceful fallbacks
+
+---
+
+## 🏗️ Architecture
+
+```
+src/
+├── MAL.ts           # Main plugin logic (TypeScript)
+├── manifest.json    # Plugin metadata
+├── icon.png         # Plugin icon
+└── logo.png         # Repository logo
+```
+
+### Key Functions
+
+| Function | Purpose |
+|----------|----------|
+| `init()` | Plugin entry point |
+| `getMalId()` | Resolve MAL ID from multiple sources |
+| `malButton.onClick()` | Handle button click & fetch data |
+| `malTray.render()` | Render tray UI with link |
+
+---
+
+## 📝 Changelog
+
+### v1.0.0 (Production Release)
+
+✅ Complete rewrite with production standards  
+✅ TypeScript interfaces & proper typing  
+✅ Enhanced error handling with state management  
+✅ Loading states during API calls  
+✅ Improved UX with clear copy instructions  
+✅ Multiple MAL ID source fallbacks  
+✅ Comprehensive documentation  
+✅ Code cleanup & optimization  
+
+See [CHANGELOG.md](CHANGELOG.md) for full history.
+
+---
+
+## 🔧 Development
+
+### Build Requirements
+
+- TypeScript 4.0+
+- Seanime 2.7.0+
+- Node.js 16+ (for compilation)
+
+### Local Testing
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/bruuhim/MAL-Button-Seanime.git
+   cd MAL-Button-Seanime
+   ```
+
+2. **Compile TypeScript** (optional, Seanime handles it)
+   ```bash
+   tsc src/MAL.ts --target es2020
+   ```
+
+3. **Test in Seanime Playground**
+   - Paste `src/MAL.ts` content into Extensions → Playground
+   - Test with different anime entries
+
+### Adding Features
+
+To extend this plugin:
+
+1. **Add new state**
+   ```typescript
+   const newState = ctx.state<type>(defaultValue);
+   ```
+
+2. **Update `getMalId()`** for new sources
+
+3. **Modify `malTray.render()`** for UI changes
+
+---
+
+## 🐛 Troubleshooting
+
+### "No MAL ID found"
+
+- Anime might not be indexed on MyAnimeList
+- Check if it's a recent release
+- Verify anime exists on [MAL directly](https://myanimelist.net)
+
+### Long-press not working?
+
+- This is expected — use **select + right-click → copy** instead
+- Different platforms handle selection differently
+
+### Plugin not showing?
+
+1. Check Seanime Extensions → Installed
+2. Verify manifest.json is valid
+3. Restart Seanime completely
+4. Check console for errors (Settings → Logs)
+
+---
+
+## 📚 API Reference
+
+### Seanime Plugin APIs Used
+
+```typescript
+// UI
+ctx.action.newAnimePageButton()  // Create button
+ctx.newTray()                    // Create tray popup
+ctx.toast.success()              // Show success message
+ctx.toast.error()                // Show error message
+
+// State
+ctx.state<T>()                   // Create state variable
+state.get()                      // Read state
+state.set(value)                 // Update state
+
+// API
+ctx.anime.getAnimeEntry(mediaId) // Fetch anime data
+```
+
+---
+
+## 📄 License
+
+MIT License - See [LICENSE](LICENSE) for details
+
+---
+
+## 🤝 Contributing
+
+Found a bug? Have an idea?  
+Open an [issue](https://github.com/bruuhim/MAL-Button-Seanime/issues) or submit a PR!
+
+**Contribution guidelines:**
+- Follow existing code style (TypeScript)
+- Add comments for non-obvious logic
+- Test before submitting
+- Update CHANGELOG.md
+
+---
+
+## 🔗 Links
+
+- **Repository**: [github.com/bruuhim/MAL-Button-Seanime](https://github.com/bruuhim/MAL-Button-Seanime)
+- **Seanime**: [github.com/5rahim/seanime](https://github.com/5rahim/seanime)
+- **MyAnimeList**: [myanimelist.net](https://myanimelist.net)
+
+---
+
+<div align="center">
+  <p>Made with ❤️ for anime fans</p>
+  <p>If you find this useful, please ⭐ the repo!</p>
+</div>
