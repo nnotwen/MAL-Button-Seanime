@@ -96,7 +96,8 @@ function init() {
         malButton.onClick(async (event: any) => {
             const media = event.media;
             
-            log.sendInfo(`=== MAL Button Click ===");
+            // v1.19.1: Fixed syntax error here
+            log.sendInfo("=== MAL Button Click ===");
             log.send(`Anime: ${media.title.userPreferred}`);
             log.send(`Media ID: ${media.id}`);
             log.send(`idMal field: ${media.idMal}`);
@@ -244,6 +245,6 @@ function init() {
             return tray.stack([header, terminal], { gap: 2, style: { padding: "12px" }});
         });
         
-        log.sendInfo("MAL Button v1.19.0 initialized");
+        log.sendInfo("MAL Button v1.19.1 initialized");
     });
 }
