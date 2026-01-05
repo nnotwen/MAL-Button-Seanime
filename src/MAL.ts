@@ -63,7 +63,8 @@ function init() {
         // v1.21.0: Use proper Seanime system command API
         const openMalLink = (url: string) => {
             try {
-                log.send(`Opening link via system open command: ${url}`);\n                const cmd = $os.cmd("open", url);
+                log.send(`Opening link via system open command: ${url}`);
+                const cmd = $os.cmd("open", url);
                 cmd.start();
                 cmd.wait();
                 
