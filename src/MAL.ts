@@ -5,7 +5,7 @@
  * MAL Button Plugin for Seanime
  * Adds a MyAnimeList link button to anime details page
  * 
- * @version 1.1.6
+ * @version 1.1.7
  * @author bruuhim
  */
 
@@ -18,7 +18,7 @@ interface MALState {
 
 function init() {
     $ui.register((ctx: any) => {
-        console.log("[MAL Button] Plugin initializing... v1.1.6");
+        console.log("[MAL Button] Plugin initializing... v1.1.7");
         console.log("[MAL Button] ctx keys:", Object.keys(ctx || {}));
         if (ctx?.screen) console.log("[MAL Button] ctx.screen keys:", Object.keys(ctx.screen));
         if (ctx?.action) console.log("[MAL Button] ctx.action keys:", Object.keys(ctx.action));
@@ -105,28 +105,43 @@ function init() {
 
                     console.log(`[MAL Button] Attempting to open URL: ${malUrl}`);
 
-                    // v1.1.6 attempts using discovered ctx keys
+                    // v1.1.7: Use $os.cmd to open the browser directly
                     try {
-                        // Try 1: ctx.externalPlayerLink.open
-                        console.log("[MAL Button] Attempt 1: Checking for ctx.externalPlayerLink.open...");
-                        if (typeof ctx.externalPlayerLink?.open === 'function') {
-                            console.log("[MAL Button] Using ctx.externalPlayerLink.open");
-                            ctx.externalPlayerLink.open(malUrl);
-                            return;
-                        }
+                        // @ts-ignore
+                        if (typeof $os?.cmd === 'function') {
+                            // @ts-ignore
+                            console.log(`[MAL Button] Using $os.cmd on platform: ${$os.platform}`);
+                            let command = "";
+                            let args: string[] = [];
 
-                        // Try 2: ctx.screen.navigateTo (might only work for internal links, but worth a shot)
-                        console.log("[MAL Button] Attempt 2: Checking for ctx.screen.navigateTo...");
-                        if (typeof ctx.screen?.navigateTo === 'function') {
-                            console.log("[MAL Button] Using ctx.screen.navigateTo");
-                            ctx.screen.navigateTo(malUrl);
-                            return;
+                            // @ts-ignore
+                            if ($os.platform === 'windows') {
+                                command = "cmd";
+                                args = ["/c", "start", malUrl];
+                                // @ts-ignore
+                            } else if ($os.platform === 'darwin') {
+                                command = "open";
+                                args = [malUrl];
+                            } else {
+                                // Linux / Unix
+                                command = "xdg-open";
+                                args = [malUrl];
+                            }
+
+                            if (command) {
+                                // @ts-ignore
+                                $os.cmd(command, ...args).run();
+                                console.log(`[MAL Button] Executed: ${command} ${args.join(' ')}`);
+                                return;
+                            }
+                        } else {
+                            console.log("[MAL Button] $os.cmd not available (v1.1.7)");
                         }
                     } catch (e) {
-                        console.error("[MAL Button] Error during direct opening attempt:", e);
+                        console.error("[MAL Button] Error during $os.cmd attempt:", e);
                     }
 
-                    console.log("[MAL Button] No direct opening API found or worked. Falling back to tray.");
+                    console.log("[MAL Button] No direct opening method worked. Falling back to tray.");
                     // If direct opening fails, use the tray as fallback
                     malTray.open();
                 } else {
