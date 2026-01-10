@@ -21,22 +21,9 @@ function init() {
         // Create MAL button for anime page
         const malButton = ctx.action.newAnimePageButton({
             label: "MAL",
+            icon: "https://raw.githubusercontent.com/bruuhim/MAL-Button-Seanime/refs/heads/main/src/icon.png", // Added icon for consistency if supported, though original didn't have it in props
         });
         malButton.mount();
-
-        // Initialize state
-        const malUrlState = ctx.state<string | null>(null);
-        const animeNameState = ctx.state<string | null>(null);
-        const isLoadingState = ctx.state<boolean>(false);
-        const errorState = ctx.state<string | null>(null);
-
-        // Create tray for displaying the link
-        const malTray = ctx.newTray({
-            tooltipText: "MyAnimeList Link",
-            withContent: true,
-            width: "600px",
-            iconUrl: "https://raw.githubusercontent.com/bruuhim/MAL-Button-Seanime/refs/heads/main/src/icon.png",
-        });
 
         /**
          * Fetch MAL ID from various sources
@@ -77,171 +64,24 @@ function init() {
         }
 
         /**
-         * Handle button click - fetch MAL ID and display link
+         * Handle button click - fetch MAL ID and open link
          */
         malButton.onClick(async (event: any) => {
             const media = event.media;
 
             try {
-                isLoadingState.set(true);
-                errorState.set(null);
-
                 const malId = await getMalId(media);
 
                 if (malId) {
                     const malUrl = `https://myanimelist.net/anime/${malId}`;
-                    const animeName = media.title?.userPreferred || media.title?.english || "Unknown";
-
-                    malUrlState.set(malUrl);
-                    animeNameState.set(animeName);
-
-                    ctx.toast.success("✅ MAL Link Ready - Open tray to copy");
-                    malTray.open();
+                    window.open(malUrl, "_blank");
                 } else {
-                    const errorMsg = "❌ No MAL ID found for this anime";
-                    errorState.set(errorMsg);
-                    ctx.toast.error(errorMsg);
+                    ctx.toast.error("❌ No MAL ID found for this anime");
                 }
             } catch (error: any) {
                 const errorMsg = `Error: ${error?.message || error}`;
-                errorState.set(errorMsg);
                 ctx.toast.error(errorMsg);
-            } finally {
-                isLoadingState.set(false);
             }
-        });
-
-        /**
-         * Render tray content with copy instructions
-         */
-        malTray.render(() => {
-            const url = malUrlState.get();
-            const animeName = animeNameState.get();
-            const isLoading = isLoadingState.get();
-            const error = errorState.get();
-
-            if (error) {
-                return malTray.stack({
-                    items: [
-                        malTray.text("⚠️ Error", {
-                            style: {
-                                fontSize: "1.1em",
-                                fontWeight: "bold",
-                                color: "#ff6b6b",
-                                marginBottom: "8px",
-                            },
-                        }),
-                        malTray.text(error, {
-                            style: {
-                                fontSize: "0.9em",
-                                color: "#ff6b6b",
-                                padding: "12px",
-                                background: "rgba(255, 107, 107, 0.1)",
-                                borderRadius: "6px",
-                                lineHeight: "1.4",
-                            },
-                        }),
-                    ],
-                    gap: 0,
-                    style: { padding: "16px" },
-                });
-            }
-
-            if (isLoading) {
-                return malTray.stack({
-                    items: [
-                        malTray.text("⏳ Loading...", {
-                            style: {
-                                fontSize: "1em",
-                                fontWeight: "bold",
-                            },
-                        }),
-                    ],
-                    gap: 0,
-                    style: { padding: "16px" },
-                });
-            }
-
-            if (!url) {
-                return malTray.stack({
-                    items: [
-                        malTray.text("Click MAL button to fetch link", {
-                            style: {
-                                fontSize: "0.95em",
-                                color: "#999",
-                            },
-                        }),
-                    ],
-                    gap: 0,
-                    style: { padding: "16px" },
-                });
-            }
-
-            return malTray.stack({
-                items: [
-                    // Anime name
-                    malTray.text(animeName || "MyAnimeList", {
-                        style: {
-                            fontSize: "1.1em",
-                            fontWeight: "bold",
-                            marginBottom: "12px",
-                            color: "#333",
-                        },
-                    }),
-
-                    // MAL Link
-                    malTray.text(url, {
-                        style: {
-                            fontSize: "0.9em",
-                            color: "#2980b9",
-                            fontFamily: "monospace",
-                            padding: "12px",
-                            background: "rgba(41, 128, 185, 0.1)",
-                            border: "1px solid rgba(41, 128, 185, 0.3)",
-                            borderRadius: "6px",
-                            wordBreak: "break-all",
-                            lineHeight: "1.5",
-                            userSelect: "text",
-                            cursor: "text",
-                        },
-                    }),
-
-                    // Copy instructions
-                    malTray.text("📋 How to copy:", {
-                        style: {
-                            fontSize: "0.85em",
-                            fontWeight: "600",
-                            marginTop: "12px",
-                            color: "#333",
-                        },
-                    }),
-
-                    malTray.text("1. Select the URL above (triple-click or drag)\n2. Right-click → Copy\n3. Paste anywhere (Ctrl+V / Cmd+V)", {
-                        style: {
-                            fontSize: "0.8em",
-                            color: "#666",
-                            lineHeight: "1.6",
-                            padding: "8px 0",
-                            whiteSpace: "pre-wrap",
-                        },
-                    }),
-
-                    // Footer note
-                    malTray.text("🔗 Or open directly in browser (requires external browser plugin)", {
-                        style: {
-                            fontSize: "0.75em",
-                            color: "#999",
-                            marginTop: "8px",
-                            fontStyle: "italic",
-                        },
-                    }),
-                ],
-                gap: 0,
-                style: {
-                    padding: "16px",
-                    maxWidth: "100%",
-                },
-            });
         });
     });
 }
