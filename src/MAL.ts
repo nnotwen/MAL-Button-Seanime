@@ -5,7 +5,7 @@
  * MAL Button Plugin for Seanime
  * Adds a MyAnimeList link button to anime details page
  * 
- * @version 1.1.7
+ * @version 1.1.8
  * @author bruuhim
  */
 
@@ -18,7 +18,7 @@ interface MALState {
 
 function init() {
     $ui.register((ctx: any) => {
-        console.log("[MAL Button] Plugin initializing... v1.1.7");
+        console.log("[MAL Button] Plugin initializing... v1.1.8");
         console.log("[MAL Button] ctx keys:", Object.keys(ctx || {}));
         if (ctx?.screen) console.log("[MAL Button] ctx.screen keys:", Object.keys(ctx.screen));
         if (ctx?.action) console.log("[MAL Button] ctx.action keys:", Object.keys(ctx.action));
