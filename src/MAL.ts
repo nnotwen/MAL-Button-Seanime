@@ -82,10 +82,7 @@ function init() {
                 malTray.anchor("Open MyAnimeList", {
                     href: url,
                     className: "bg-blue-600 hover:bg-blue-500 active:scale-[0.98] transition-all p-3 rounded-lg text-center text-sm font-bold no-underline text-white w-full block shadow-lg shadow-blue-900/20"
-                }),
-
-                // Extra info/footer
-                malTray.text("External Link", { className: "text-[10px] text-zinc-600 mt-2 text-center" })
+                })
             ], {
                 style: {
                     padding: "16px",
