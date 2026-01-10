@@ -3,7 +3,7 @@
 
 /**
  * MAL Button Plugin for Seanime
- * adds a myanimelist link button to anime details page with a polished tray ui
+ * Adds a MyAnimeList link button to anime details page with a polished tray UI
  * 
  * @version 2.0.1
  * @author bruuhim
