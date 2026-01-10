@@ -3,10 +3,10 @@
 <div align="center">
   <img src="src/icon.png" alt="MAL Button Icon" width="128" height="128" />
   <h3>🚀 Quick MyAnimeList Access for Seanime</h3>
-  <p>One-click MAL links directly from anime details page</p>
+  <p>Premium one-click MAL links directly from anime details page</p>
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](CHANGELOG.md)
 [![Seanime](https://img.shields.io/badge/seanime-2.7.0+-purple.svg)](https://github.com/5rahim/seanime)
 </div>
 
@@ -14,12 +14,11 @@
 
 ## 📋 Features
 
-✅ **One-Click MAL Links** - Fetch MyAnimeList links instantly  
-✅ **Smart ID Resolution** - Multiple fallback sources for MAL ID  
-✅ **Easy Copy** - Select & copy directly from the tray  
-✅ **Error Handling** - Graceful error messages & logging  
-✅ **Loading States** - Visual feedback during API calls  
-✅ **Production Ready** - Tested & optimized for stability  
+✅ **Premium Tray UI** - Modern, polished popup with glassmorphism aesthetics  
+✅ **One-Click Access** - Instant MAL link resolution  
+✅ **Smart ID Resolution** - Robust multi-source discovery for MAL IDs  
+✅ **Smooth Transitions** - Animated hover effects and loading states  
+✅ **Production Grade** - Highly optimized, stable, and sandbox-safe  
 
 ---
 
@@ -34,17 +33,12 @@
    - Search for "MAL Button" or "MyAnimeList"
    - Click Install
 
-3. **Reload Plugin**
-   - Restart Seanime or reload the plugin
-
 ### Usage
 
-1. **Navigate to any anime details page**
-2. **Click the "MAL" button** at the top
-3. **A tray opens** showing the MyAnimeList link
-4. **Select the URL** (triple-click or drag to select)
-5. **Right-click → Copy**
-6. **Paste anywhere** (Ctrl+V / Cmd+V)
+1. **Navigate to an anime details page**
+2. **Click the "MAL" button** in the action bar
+3. **A premium tray opens** with a direct "Open MyAnimeList" action
+4. **Click the button** to open MAL in your default browser
 
 ---
 
@@ -52,17 +46,17 @@
 
 ### MAL ID Resolution Priority
 
-The plugin uses multiple sources to find the MAL ID:
+The plugin uses a recursive strategy to ensure the link is found:
 
 ```
-1. Direct Media ID (fastest)
+1. Direct Metadata Check
    └─> media.idMal
 
-2. External Links (via API)
-   └─> Seanime API → anime entry → externalLinks
+2. Deep Entity Scrutiny
+   └─> ctx.anime.getAnimeEntry()
 
-3. Fallback
-   └─> Error message if not found
+3. External Link Mapping
+   └─> externalLinks.find("myanimelist")
 ```
 
 ### State Management
@@ -88,10 +82,10 @@ interface MALState {
 
 ```
 src/
-├── MAL.ts           # Main plugin logic (TypeScript)
-├── manifest.json    # Plugin metadata
-├── icon.png         # Plugin icon
-└── logo.png         # Repository logo
+├── MAL.ts           # Core Logic & Premium UI (TypeScript)
+├── manifest.json    # Metadata & Permissions
+├── icon.png         # Plugin Icon
+└── logo.png         # Repository Logo
 ```
 
 ### Key Functions
@@ -107,16 +101,11 @@ src/
 
 ## 📝 Changelog
 
-### v1.0.0 (Production Release)
+### v2.0.0 (Premium Overhaul)
 
-✅ Complete rewrite with production standards  
-✅ TypeScript interfaces & proper typing  
-✅ Enhanced error handling with state management  
-✅ Loading states during API calls  
-✅ Improved UX with clear copy instructions  
-✅ Multiple MAL ID source fallbacks  
-✅ Comprehensive documentation  
-✅ Code cleanup & optimization  
+🚀 **Major UI Refresh**: Completely redesigned tray with modern aesthetics.  
+🛠️ **Code Refactor**: Improved modularity and state management.  
+🎨 **Enhanced UX**: Smooth animations and clearer action buttons.  
 
 See [CHANGELOG.md](CHANGELOG.md) for full history.
 
