@@ -11,7 +11,7 @@
  * - Fix handling of "GoError: no cached data available" (graceful try/catch).
  * - Improved robustness when switching between Anime/Manga.
  *
- * @version 1.0.16
+ * @version 1.0.17
  * @author bruuhim
  */
 
