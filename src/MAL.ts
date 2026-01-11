@@ -11,13 +11,13 @@
  * - Fix handling of "GoError: no cached data available" (graceful try/catch).
  * - Improved robustness when switching between Anime/Manga.
  *
- * @version 1.0.17
+ * @version 1.0.18
  * @author bruuhim
  */
 
 function init() {
     $ui.register((ctx) => {
-        const reloadCd = ctx.state<number>(2_000); // initially reload after 2s if dom is not ready
+        const reloadCd = ctx.state<number>(500); // initially reload after 500ms if dom is not ready
 
         function isCustomSource(mediaId?: number) {
             return (mediaId ?? 0) >= 2 ** 31;
@@ -48,8 +48,8 @@ function init() {
                 ctx.setTimeout(() => {
                     // Load the current screen after x seconds
                     ctx.screen.loadCurrent();
-                    // increment load times by 2s everytime it fails to load
-                    reloadCd.set(reloadCd.get() + 2_000);
+                    // increment load times by 500ms everytime it fails to load
+                    reloadCd.set(reloadCd.get() + 500);
                 }, reloadCd.get());
                 const duration = reloadCd.get() / 1000;
 
