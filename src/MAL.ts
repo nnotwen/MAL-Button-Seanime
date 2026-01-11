@@ -5,15 +5,17 @@
  * MAL Button Plugin for Seanime
  * Adds a MyAnimeList link button (blue pill) to anime details page
  * 
- * Uses DOM injection with anchor tag as recommended by the dev
+ * v3.3.0:
+ * - Added polling to wait for container (fixes "slow to show")
+ * - Enhanced deduplication logic
  * 
- * @version 3.2.0
+ * @version 3.3.0
  * @author bruuhim
  */
 
 function init() {
     $ui.register((ctx: any) => {
-        console.log("[MAL Button] v3.2.0 Initializing...");
+        console.log("[MAL Button] v3.3.0 Initializing...");
 
         // --- Constants ---
         const BUTTON_ATTR = "data-mal-button";
@@ -27,31 +29,45 @@ function init() {
         };
 
         /**
+         * Wait for the container element to appear
+         */
+        const waitForContainer = async (retries = 10, interval = 500): Promise<any> => {
+            for (let i = 0; i < retries; i++) {
+                const container = await ctx.dom.queryOne("[data-media-page-header-entry-details-date-container]");
+                if (container) return container;
+                await new Promise(resolve => setTimeout(resolve, interval));
+            }
+            return null;
+        };
+
+        /**
          * Inject the MAL button (blue pill) into the header
          */
         const injectButton = async (animeId: number) => {
             try {
-                // Skip if already injected for this anime
-                if (lastInjectedId === animeId) {
-                    console.log("[MAL Button] Already injected for anime:", animeId);
-                    return;
-                }
+                // Wait for container - wait up to 5 seconds
+                const container = await waitForContainer();
 
-                // Find the container
-                const container = await ctx.dom.queryOne("[data-media-page-header-entry-details-date-container]");
                 if (!container) {
-                    console.log("[MAL Button] Container not found, will retry...");
+                    console.log("[MAL Button] Container not found after waiting.");
                     return;
                 }
 
-                // Remove any existing MAL buttons first
-                const existing = await container.queryOne(`[${BUTTON_ATTR}]`);
-                if (existing) {
-                    existing.remove();
-                    console.log("[MAL Button] Removed existing button.");
+                // Remove ALL existing MAL buttons first (in case of duplicates)
+                // We assume query returns an array if there are multiple matches? 
+                // ctx.dom API usually has query and queryOne. Let's stick to cleaning up what we find.
+                // We'll loop until no more buttons are found to be safe.
+                while (true) {
+                    const existing = await container.queryOne(`[${BUTTON_ATTR}]`);
+                    if (existing) {
+                        await existing.remove();
+                        console.log("[MAL Button] Removed existing button.");
+                    } else {
+                        break;
+                    }
                 }
 
-                // Fetch anime data to get MAL ID
+                // Fetch anime data
                 const animeEntry = await ctx.anime.getAnimeEntry(animeId);
                 const malId = mediaToMalId(animeEntry?.media);
 
@@ -68,7 +84,7 @@ function init() {
                 anchor.setAttribute("rel", "noopener noreferrer");
                 anchor.setInnerHTML("MAL");
 
-                // Apply blue pill styles
+                // Apply styles
                 anchor.setStyle("background-color", "#2e51a2");
                 anchor.setStyle("padding", "0 10px");
                 anchor.setStyle("border-radius", "9999px");
@@ -79,12 +95,16 @@ function init() {
                 anchor.setStyle("display", "inline-flex");
                 anchor.setStyle("align-items", "center");
                 anchor.setStyle("cursor", "pointer");
+                anchor.setStyle("margin-left", "0.5rem"); // Add some spacing
 
-                // Append to container
-                container.append(anchor);
-                lastInjectedId = animeId;
+                // Final check before appending
+                const doubleCheck = await container.queryOne(`[${BUTTON_ATTR}]`);
+                if (!doubleCheck) {
+                    container.append(anchor);
+                    lastInjectedId = animeId;
+                    console.log("[MAL Button] Blue pill injected for MAL ID:", malId);
+                }
 
-                console.log("[MAL Button] Blue pill injected for MAL ID:", malId);
             } catch (err) {
                 console.error("[MAL Button] Injection error:", err);
             }
@@ -93,35 +113,33 @@ function init() {
         // --- Navigation Handler ---
         if (ctx.screen && ctx.screen.onNavigate) {
             ctx.screen.onNavigate(async (nav: any) => {
-                // Check if on anime entry page
                 if (nav?.pathname !== "/entry" || !nav?.searchParams?.id) return;
 
                 const mediaId = parseInt(nav.searchParams.id);
                 if (isNaN(mediaId)) return;
 
                 console.log("[MAL Button] Navigation to anime page, ID:", mediaId);
+                // Reset lastInjectedId to ensure we force a check even if revisiting same page
+                lastInjectedId = null;
                 await injectButton(mediaId);
             });
-            console.log("[MAL Button] Navigation handler registered.");
         }
 
-        // --- DOM Observer for Persistence ---
+        // --- DOM Observer ---
         if (ctx.dom && ctx.dom.observe) {
             ctx.dom.observe("[data-media-page-header-entry-details-date-container]", async () => {
                 if (lastInjectedId) {
+                    // Just a quick check to see if our button is gone
                     const container = await ctx.dom.queryOne("[data-media-page-header-entry-details-date-container]");
                     if (container) {
                         const existing = await container.queryOne(`[${BUTTON_ATTR}]`);
                         if (!existing) {
-                            console.log("[MAL Button] DOM changed, re-injecting...");
-                            const tempId = lastInjectedId;
-                            lastInjectedId = null; // Reset to allow re-injection
-                            await injectButton(tempId);
+                            console.log("[MAL Button] Button missing, re-injecting...");
+                            await injectButton(lastInjectedId);
                         }
                     }
                 }
             });
-            console.log("[MAL Button] DOM observer registered.");
         }
     });
 }
