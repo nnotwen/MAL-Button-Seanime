@@ -5,7 +5,7 @@
  * MAL Button Plugin for Seanime
  * Adds a MyAnimeList link button to anime details page with native styling
  * 
- * @version 2.3.2
+ * @version 2.3.3
  * @author bruuhim
  */
 
@@ -34,20 +34,28 @@ function init() {
                 } catch (e) { }
             }
 
-            if (!animeId) return;
+            if (!animeId) {
+                console.log("[MAL Button] No Anime ID found, skipping injection.");
+                return;
+            }
 
             // The container selector
             const containerSelector = 'div[data-anime-meta-section-buttons-container="true"]';
             const container = document.querySelector(containerSelector);
+            console.log("[MAL Button] Container found?", !!container);
 
             // If button already exists, remove it if we are refreshing, or return if it matches? 
             // Safer to remove and re-add to ensure correct ID closure
             const existingBtn = document.getElementById("mal-injected-button");
-            if (existingBtn) existingBtn.remove();
+            if (existingBtn) {
+                console.log("[MAL Button] Removing existing button.");
+                existingBtn.remove();
+            }
 
             if (container) {
                 // Determine insertion point: After the first anchor (AniList link) or at start
                 const anilistLink = container.querySelector("a[href*='anilist.co']");
+                console.log("[MAL Button] AniList link found?", !!anilistLink);
 
                 // Create the button
                 const btn = document.createElement("button");
@@ -92,15 +100,35 @@ function init() {
                 // Add to DOM
                 if (anilistLink) {
                     anilistLink.insertAdjacentElement("afterend", btn);
+                    console.log("[MAL Button] Button injected after AniList link.");
                 } else {
                     container.appendChild(btn);
+                    console.log("[MAL Button] Button injected at end of container.");
                 }
             } else {
-                // If container not found immediately, we can try a brief retry if allowed?
-                // Or just hope the user navigates again.
-                // With onNavigate, the DOM might not be ready yet.
-                // We'll try to execute a small delay using requestAnimationFrame recursion if available/allowed
-                // But let's verify mostly on the object parsing first.
+                console.log("[MAL Button] Container not found. Accessing fallback retry...");
+                // Fallback: If container is missing, we might be too early.
+                // We'll try to check a few times.
+                let attempts = 0;
+                const maxAttempts = 10;
+
+                const checkAgain = () => {
+                    attempts++;
+                    const c = document.querySelector(containerSelector);
+                    if (c) {
+                        console.log("[MAL Button] Container found on attempt", attempts);
+                        injectButton(animeId); // Retry
+                    } else if (attempts < maxAttempts) {
+                        // Use requestAnimationFrame if available (standard in browsers)
+                        if (typeof requestAnimationFrame !== "undefined") {
+                            requestAnimationFrame(checkAgain);
+                        }
+                    } else {
+                        console.log("[MAL Button] Gave up finding container after", maxAttempts, "attempts.");
+                    }
+                };
+
+                checkAgain();
             }
         };
 
